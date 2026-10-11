@@ -10,6 +10,7 @@ void manejadorAlarma(int sig)
     //no va a hacer nada, sólo existe para qeu Z no muera al no poder manejar la señal recibida
 }
 
+
 /**
  * Función apra generar el pstree
  */
@@ -45,6 +46,8 @@ void crearAlarma(pid_t pidA)
 
 void crearArbol(int seg)
 {
+    pid_t pid_ejec = getpid();
+    printf("Soy el proceso ejec: mi pid es %d\n", pid_ejec);
 
     pid_t pidA = fork();// creo el hijo de arb y guardo su pid
 
@@ -55,6 +58,10 @@ void crearArbol(int seg)
     }
     else if(pidA == 0)//lo que ejecutará el proceso A
     {
+        pid_t pid_a = getpid();
+        pid_t pid_ejec_real = getppid();
+        printf("Soy el proceso A: mi pid es %d. Mi padre es %d\n", pid_a, pid_ejec_real);
+
         signal(SIGUSR1, hacerPstree);//cuando le llegue la señal que manda Z, se meterá en la función para hacer pstree
 
         pid_t pidA_real = getpid();//pra obtener el identificador real de A y pasarlo para mandar la señal 
@@ -67,6 +74,10 @@ void crearArbol(int seg)
         }
         else if(pidB == 0)//lo que ejecutará B
         {
+            pid_t pid_b = getpid();
+            pid_t pid_a_real = getppid();
+            printf("Soy el proceso B: mi pid es %d. Mi padre es %d. Mi abuelo es %d\n", pid_b, pid_a_real, pid_ejec_real);
+
             signal(SIGUSR2, manejadorAlarma); //B  se prepara apra la señal de muerte que le enviará A
 
             pid_t pidX = fork(); //creo el hijo X
@@ -78,7 +89,11 @@ void crearArbol(int seg)
             }
             else if(pidX == 0)//código que ejecutará el proceso X únicamente
             {
+                pid_t pid_x = getpid();
+                printf("Soy el proceso X: mi pid es %d. Mi padre es %d. Mi abuelo es %d. Mi bisabuelo es %d\n", pid_x, pid_b, pid_a_real, pid_ejec_real);
+                signal(SIGTERM, manejadorAlarma); // Para capturar SIGTERM y no morir al instante
                 pause();
+                printf("Soy X (%d) y muero\n", pid_x);
                 exit(0);
             }
 
@@ -91,7 +106,11 @@ void crearArbol(int seg)
             }
             else if (pidY == 0)
             {
+                pid_t pid_y = getpid();
+                printf("Soy el proceso Y: mi pid es %d. Mi padre es %d. Mi abuelo es %d. Mi bisabuelo es %d\n", pid_y, pid_b, pid_a_real, pid_ejec_real);
+                signal(SIGTERM, manejadorAlarma); // Para capturar SIGTERM y no morir al instante
                 pause();
+                printf("Soy Y (%d) y muero\n", pid_y);
                 exit(0);
             }
 
@@ -104,12 +123,17 @@ void crearArbol(int seg)
             }
             else if(pidZ == 0)
             {
+                pid_t pid_z = getpid();
+                printf("Soy el proceso Z: mi pid es %d. Mi padre es %d. Mi abuelo es %d. Mi bisabuelo es %d\n", pid_z, pid_b, pid_a_real, pid_ejec_real);
+
                 signal(SIGALRM, manejadorAlarma);//para que no muera por la señal SIGALRM sin manejarla
+                signal(SIGTERM, manejadorAlarma);// Para capturar SIGTERM y no morir al instante
 
                 alarm(seg);//espera los segundos que se le pasó al programa como argumento
                 pause();//se duerme a Z 
                 crearAlarma(pidA_real);//se llama a la función apra crear la alarma
                 pause(); //congelo a Z para que salga en el pstree
+                printf("Soy Z (%d) y muero\n", pid_z);
                 exit(0);
             }
 
@@ -124,6 +148,7 @@ void crearArbol(int seg)
             wait(NULL);//espera a Y
             wait(NULL);//espera a Z
 
+            printf("Soy B (%d) y muero\n", pid_b);
             exit(0);
 
         }
@@ -132,10 +157,14 @@ void crearArbol(int seg)
         kill(pidB, SIGUSR2); //A mata a B
 
         wait(NULL);//espera a que B termine
+        printf("Soy A (%d) y muero\n", pid_a);
         exit(0);
-    }            
+
+    }     
+
     //esto que viene lo ejecutará arb
     wait(NULL);
+    printf("Soy ejec (%d) y muero\n", pid_ejec);
 }
 
 
