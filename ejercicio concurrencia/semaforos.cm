@@ -1,0 +1,55 @@
+const int TAMANYO_BUFFER = 5;
+
+int buffer[TAMANYO_BUFFER];
+
+semaphore mutex = 1;
+semaphore huecos = TAMANYO_BUFFER;
+semaphore llenos = 0;
+
+int contProductor = 0;
+int contConsumidor = 0;
+int dato = 1;
+
+void productor()
+{
+	int i;
+	for (i = 0; i < 15; i++)
+	{
+		wait(huecos);
+		wait(mutex);
+		
+		buffer[contProductor] = dato;
+		dato = dato + 1;
+
+		contProductor = (contProductor + 1) % TAMANYO_BUFFER;
+		
+		signal(mutex);
+		signal(llenos);
+	}
+}
+
+void consumidor()
+{
+	int i;
+	int dato_sacado;
+	for (i = 0; i < 15; i++)
+	{
+		wait(llenos);
+		wait(mutex);
+
+		dato_sacado = buffer[contConsumidor];
+		contConsumidor = (contConsumidor + 1) % TAMANYO_BUFFER;
+
+		signal(mutex);
+		signal(huecos);
+	}
+}
+
+void main()
+{
+	cobegin
+	{
+		productor();
+		consumidor();
+	}
+}
