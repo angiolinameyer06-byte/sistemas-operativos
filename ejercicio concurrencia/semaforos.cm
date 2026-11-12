@@ -9,7 +9,7 @@ const
 const
 	int ID_PROD = 20; int ID_CONS = 30;
 
-const int TIEMPO_ESPERA = 50;
+const int TIEMPO_ESPERA = 25;
 
 semaphore mutex = 1;
 semaphore huecos = TAMANYO_BUFFER;
@@ -33,24 +33,13 @@ void inicializar_graficos()
 	create(ID_CONS, CIRCLE, YELLOW, 280, 45, 45, 45);
 }
 
-void retardo(int ms)
-{
-	int k;
-	int espera;
-	espera = 0;
-	for(k = 0; k < ms; k = k + 1)
-	{
-		espera++;
-	}
-}
+
 
 void productor()
 {
 	int i;
 	for (i = 0; i < 15; i++)
 	{
-		retardo(TIEMPO_ESPERA);
-
 		wait(huecos);
 		wait(mutex);
 		
@@ -89,8 +78,6 @@ void consumidor()
 
 		signal(mutex);
 		signal(huecos);
-
-		retardo(TIEMPO_ESPERA);
 	}
 }
 
