@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    //se crea el struct que contendrá la infmración del servidor que se quiere conectar
     struct sockaddr_in dir_servidor = {0};
 
     dir_servidor.sin_family = AF_INET;//se usará el protocolo de red IPv4
