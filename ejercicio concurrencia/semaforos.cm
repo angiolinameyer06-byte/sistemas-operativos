@@ -1,3 +1,5 @@
+// Angiolina Meyer - Y2872983K
+
 const int TAMANYO_BUFFER = 5;
 
 const 
@@ -9,7 +11,9 @@ const
 const
     int ID_PROD = 20; int ID_CONS = 30;
 
-const int TIEMPO_ESPERA = 25;
+const int TIEMPO_PROD = 15;
+const int TIEMPO_CONS = 15;
+const int TIEMPO_ESPERA = 10;
 
 semaphore mutex = 1;
 semaphore huecos = TAMANYO_BUFFER;
@@ -26,7 +30,7 @@ void pausa(int espera)
     int k;
     for (k = 0; k < espera; k++)
     {
-        // mini pausa para ver bien cada estado
+        // mini pausa para visualizar los estados
     }
 }
 
@@ -42,26 +46,62 @@ void inicializar_graficos()
     create(ID_CONS, CIRCLE, YELLOW, 280, 45, 45, 45);
 }
 
+int producir()
+{
+    int nuevo_dato;
+    pausa(TIEMPO_PROD);
+    nuevo_dato = dato;
+    dato = dato + 1;
+    return nuevo_dato;
+}
+
+void consumir(int dato_sacado)
+{
+    pausa(TIEMPO_CONS);
+}
+
+void anyadir_buffer(int item)
+{
+    buffer[contProductor] = item;
+
+    changecolor(contProductor + 1, GREEN);
+    changecolor(ID_PROD, BLUE);
+    changecolor(ID_CONS, YELLOW);
+
+    pausa(TIEMPO_ESPERA);
+
+    contProductor = (contProductor + 1) % TAMANYO_BUFFER;
+    changecolor(ID_PROD, YELLOW);
+}
+
+int coger_buffer()
+{
+    int dato_sacado;
+    dato_sacado = buffer[contConsumidor];
+
+    changecolor(contConsumidor + 1, WHITE);
+    changecolor(ID_PROD, YELLOW);
+    changecolor(ID_CONS, MAGENTA);
+
+    pausa(TIEMPO_ESPERA);
+
+    contConsumidor = (contConsumidor + 1) % TAMANYO_BUFFER;
+    changecolor(ID_CONS, YELLOW);
+
+    return dato_sacado;
+}
+
 void productor()
 {
     int i;
+    int item;
     for (i = 0; i < 15; i++)
     {
+        item = producir();
+
         wait(huecos);
         wait(mutex);
-        
-        buffer[contProductor] = dato;
-        dato = dato + 1;
-
-        changecolor(contProductor + 1, GREEN);
-
-        changecolor(ID_PROD, BLUE);
-        changecolor(ID_CONS, YELLOW);
-
-        pausa(TIEMPO_ESPERA);
-
-        contProductor = (contProductor + 1) % TAMANYO_BUFFER;
-        
+        anyadir_buffer(item);
         signal(mutex);
         signal(llenos);
     }
@@ -75,20 +115,11 @@ void consumidor()
     {
         wait(llenos);
         wait(mutex);
-
-        dato_sacado = buffer[contConsumidor];
-
-        changecolor(contConsumidor + 1, WHITE);
-
-        changecolor(ID_PROD, YELLOW);
-        changecolor(ID_CONS, MAGENTA);
-
-        pausa(TIEMPO_ESPERA);
-
-        contConsumidor = (contConsumidor + 1) % TAMANYO_BUFFER;
-
+        dato_sacado = coger_buffer();
         signal(mutex);
         signal(huecos);
+
+        consumir(dato_sacado);
     }
 }
 
@@ -96,7 +127,7 @@ void main()
 {
     int i;
 
-    for( i = 0; i < TAMANYO_BUFFER; i++)
+    for(i = 0; i < TAMANYO_BUFFER; i++)
     {
         buffer[i] = 0;
     }
