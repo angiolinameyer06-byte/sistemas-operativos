@@ -1,13 +1,13 @@
 const int TAMANYO_BUFFER = 5;
 
 const 
-	int RED = 1; int BLACK = 2; int BLUE = 3; int YELLOW = 4; int GREEN = 5;
-	int MAGENTA = 6; int WHITE = 7;
+    int RED = 1; int BLACK = 2; int BLUE = 3; int YELLOW = 4; int GREEN = 5;
+    int MAGENTA = 6; int WHITE = 7;
 const
-	int CIRCLE = 1; int LINE = 2; int RECTANGLE = 3; int TRIANGLE = 4; int RNDRECT = 6;
+    int CIRCLE = 1; int LINE = 2; int RECTANGLE = 3; int TRIANGLE = 4; int RNDRECT = 6;
 
 const
-	int ID_PROD = 20; int ID_CONS = 30;
+    int ID_PROD = 20; int ID_CONS = 30;
 
 const int TIEMPO_ESPERA = 25;
 
@@ -21,80 +21,91 @@ int contProductor = 0;
 int contConsumidor = 0;
 int dato = 1;
 
-void inicializar_graficos()
+void pausa(int espera)
 {
-	int i;
-	for(i = 0; i < TAMANYO_BUFFER; i++)
-	{
-		create(i + 1, RNDRECT, WHITE, 160, 40 + (i * 45), 70, 35);
-	}
-
-	create(ID_PROD, TRIANGLE, YELLOW, 60, 45, 50, 40);
-	create(ID_CONS, CIRCLE, YELLOW, 280, 45, 45, 45);
+    int k;
+    for (k = 0; k < espera; k++)
+    {
+        // mini pausa para ver bien cada estado
+    }
 }
 
+void inicializar_graficos()
+{
+    int i;
+    for(i = 0; i < TAMANYO_BUFFER; i++)
+    {
+        create(i + 1, RNDRECT, WHITE, 160, 40 + (i * 45), 70, 35);
+    }
 
+    create(ID_PROD, TRIANGLE, YELLOW, 60, 45, 50, 40);
+    create(ID_CONS, CIRCLE, YELLOW, 280, 45, 45, 45);
+}
 
 void productor()
 {
-	int i;
-	for (i = 0; i < 15; i++)
-	{
-		wait(huecos);
-		wait(mutex);
-		
-		buffer[contProductor] = dato;
-		dato = dato + 1;
+    int i;
+    for (i = 0; i < 15; i++)
+    {
+        wait(huecos);
+        wait(mutex);
+        
+        buffer[contProductor] = dato;
+        dato = dato + 1;
 
-		changecolor(contProductor + 1, GREEN);
+        changecolor(contProductor + 1, GREEN);
 
-		changecolor(ID_PROD, BLUE);
-		changecolor(ID_CONS, YELLOW);
+        changecolor(ID_PROD, BLUE);
+        changecolor(ID_CONS, YELLOW);
 
-		contProductor = (contProductor + 1) % TAMANYO_BUFFER;
-		
-		signal(mutex);
-		signal(llenos);
-	}
+        pausa(TIEMPO_ESPERA);
+
+        contProductor = (contProductor + 1) % TAMANYO_BUFFER;
+        
+        signal(mutex);
+        signal(llenos);
+    }
 }
 
 void consumidor()
 {
-	int i;
-	int dato_sacado;
-	for (i = 0; i < 15; i++)
-	{
-		wait(llenos);
-		wait(mutex);
+    int i;
+    int dato_sacado;
+    for (i = 0; i < 15; i++)
+    {
+        wait(llenos);
+        wait(mutex);
 
-		dato_sacado = buffer[contConsumidor];
+        dato_sacado = buffer[contConsumidor];
 
-		changecolor(contConsumidor + 1, WHITE);
+        changecolor(contConsumidor + 1, WHITE);
 
-		changecolor(ID_PROD, YELLOW);
-		changecolor(ID_CONS, MAGENTA);
+        changecolor(ID_PROD, YELLOW);
+        changecolor(ID_CONS, MAGENTA);
 
-		contConsumidor = (contConsumidor + 1) % TAMANYO_BUFFER;
+        pausa(TIEMPO_ESPERA);
 
-		signal(mutex);
-		signal(huecos);
-	}
+        contConsumidor = (contConsumidor + 1) % TAMANYO_BUFFER;
+
+        signal(mutex);
+        signal(huecos);
+    }
 }
 
 void main()
 {
-	int i;
+    int i;
 
-	for( i = 0; i < TAMANYO_BUFFER; i++)
-	{
-		buffer[i] = 0;
-	}
-	
-	inicializar_graficos();
+    for( i = 0; i < TAMANYO_BUFFER; i++)
+    {
+        buffer[i] = 0;
+    }
+    
+    inicializar_graficos();
 
-	cobegin
-	{
-		productor();
-		consumidor();
-	}
+    cobegin
+    {
+        productor();
+        consumidor();
+    }
 }
